@@ -2,19 +2,74 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>game01</title>
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-           font-family: system-ui, sans-serif; background: #111; color: #eee; }
-    h1 { font-size: 2.5rem; margin: 0 0 .5rem; }
-    p { color: #aaa; text-align: center; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>트롤 투수 – 공만 치면 되는데</title>
+  <meta name="description" content="공만 치면 되는데, 투수가 정상이 아니다. 멈추고, 분신하고, 사라지는 마구를 홈런으로 받아쳐라!">
+  <meta name="theme-color" content="#0b1a3a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <h1>game01</h1>
-    <p>준비 중입니다.</p>
-  </main>
+  <canvas id="game"></canvas>
+
+  <div id="hud-buttons">
+    <button id="btn-pause" class="icon hidden" aria-label="일시정지">⏸</button>
+    <button id="btn-mute" class="icon" aria-label="소리 끄기">🔊</button>
+  </div>
+
+  <section id="scr-title" class="overlay">
+    <div class="card">
+      <p class="kicker">BASEBALL × TROLL</p>
+      <h1>트롤 투수</h1>
+      <p class="lead">공만 치면 되는데...<br>투수가 정상이 아니다.</p>
+      <button id="btn-start" class="primary">시작하기</button>
+      <p class="small">화면 탭 · 스페이스바 = 스윙</p>
+    </div>
+  </section>
+
+  <section id="scr-select" class="overlay hidden">
+    <div class="card wide">
+      <h2>스테이지 선택</h2>
+      <div id="stage-grid"></div>
+      <button id="btn-back" class="secondary">뒤로</button>
+    </div>
+  </section>
+
+  <section id="scr-intro" class="overlay hidden">
+    <div class="card">
+      <p class="kicker" id="intro-num"></p>
+      <h2 id="intro-name"></h2>
+      <p id="intro-title" class="muted"></p>
+      <blockquote id="intro-line"></blockquote>
+      <p id="intro-mission" class="mission"></p>
+      <p id="intro-hint" class="hint"></p>
+      <button id="btn-play" class="primary">플레이 볼!</button>
+      <button id="btn-intro-back" class="secondary">스테이지 선택</button>
+    </div>
+  </section>
+
+  <section id="scr-result" class="overlay hidden">
+    <div class="card">
+      <h2 id="res-title"></h2>
+      <div id="res-stars" class="stars"></div>
+      <p id="res-detail"></p>
+      <button id="btn-next" class="primary">다음 스테이지</button>
+      <button id="btn-retry" class="secondary">다시 하기</button>
+      <button id="btn-res-select" class="secondary">스테이지 선택</button>
+    </div>
+  </section>
+
+  <section id="scr-pause" class="overlay hidden">
+    <div class="card">
+      <h2>일시정지</h2>
+      <button id="btn-resume" class="primary">계속하기</button>
+      <button id="btn-pause-retry" class="secondary">다시 하기</button>
+      <button id="btn-pause-select" class="secondary">스테이지 선택</button>
+    </div>
+  </section>
+
+  <script src="game.js"></script>
 </body>
 </html>
