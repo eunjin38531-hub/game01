@@ -7,7 +7,7 @@
   <meta name="description" content="공만 치면 되는데, 투수가 정상이 아니다. 멈추고, 분신하고, 사라지는 마구를 홈런으로 받아쳐라!">
   <meta name="theme-color" content="#16204a">
   <link rel="preload" href="fonts/Galmuri11-Bold.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -43,20 +43,6 @@
     </div>
   </section>
 
-  <section id="scr-intro" class="overlay hidden">
-    <div class="card">
-      <p class="kicker" id="intro-num"></p>
-      <img id="intro-img" class="portrait" alt="">
-      <h2 id="intro-name"></h2>
-      <p id="intro-title" class="muted"></p>
-      <p id="intro-line" class="quote"></p>
-      <p id="intro-mission" class="mission"></p>
-      <p id="intro-hint" class="hint"></p>
-      <button id="btn-play" class="primary">플레이 볼!</button>
-      <button id="btn-intro-back" class="secondary">투수 선택</button>
-    </div>
-  </section>
-
   <section id="scr-result" class="overlay hidden">
     <div class="card">
       <img id="res-img" class="portrait small-portrait" alt="">
@@ -78,6 +64,6 @@
     </div>
   </section>
 
-  <script src="game.js"></script>
+  <script src="game.js?v=3"></script>
 </body>
 </html>
