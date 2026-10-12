@@ -1209,7 +1209,7 @@
       const stars = save.stars[i] || 0;
       btn.innerHTML = `<img src="${spriteURL(st, 'idle', 2)}" alt=""><span class="n">STAGE ${i + 1}</span>` +
         `<span class="nm">${escapeHtml(st.name)}</span><span class="st">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>`;
-      btn.addEventListener('click', () => { SFX.click(); playStage(i); });
+      btn.addEventListener('click', () => { SFX.click(); openIntro(i); });
       grid.appendChild(btn);
     });
   }
@@ -1220,12 +1220,26 @@
     show('scr-select');
   }
 
-  // 투수를 고르면 바로 경기 시작
-  function playStage(i) {
+  // 투수 선택 → 소개 화면(플레이 볼!) → 경기
+  function openIntro(i) {
     G.stageIdx = i;
     G.stage = STAGES[i];
+    G.mode = 'intro';
+    G.balls = []; G.hit = null; G.results = []; G.popups = []; G.bubble = null; G.parts = [];
+    const st = G.stage;
+    $('intro-num').textContent = `STAGE ${i + 1}`;
+    $('intro-img').src = spriteURL(st, 'idle', 4);
+    $('intro-name').textContent = st.name;
+    $('intro-title').textContent = st.title;
+    $('intro-line').textContent = `"${st.intro}"`;
+    $('intro-mission').textContent = `공 ${BALLS}개 중 홈런 ${st.need}개!`;
+    $('intro-hint').textContent = `힌트: ${st.hint}`;
+    show('scr-intro');
+  }
+
+  function playBall() {
     startStage();
-    popup(`STAGE ${i + 1} ${G.stage.name}`, `공 ${BALLS}개 중 홈런 ${G.stage.need}개!`, '#ffcd3c', 1.8);
+    popup(`STAGE ${G.stageIdx + 1} ${G.stage.name}`, `공 ${BALLS}개 중 홈런 ${G.stage.need}개!`, '#ffcd3c', 1.8);
   }
 
   function pause() {
@@ -1244,7 +1258,9 @@
   }
   bind('btn-start', openSelect);
   bind('btn-back', () => { G.mode = 'menu'; show('scr-title'); });
-  bind('btn-next', () => playStage(Math.min(STAGES.length - 1, G.stageIdx + 1)));
+  bind('btn-play', playBall);
+  bind('btn-intro-back', openSelect);
+  bind('btn-next', () => openIntro(Math.min(STAGES.length - 1, G.stageIdx + 1)));
   bind('btn-retry', startStage);
   bind('btn-res-select', openSelect);
   bind('btn-pause', pause);

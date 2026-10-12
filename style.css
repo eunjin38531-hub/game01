@@ -28,7 +28,6 @@ html, body {
   background: #16204a;
   color: var(--text);
   font-family: "Galmuri11", monospace;
-  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -36,7 +35,7 @@ html, body {
   -webkit-font-smoothing: none;
 }
 
-canvas { display: block; position: fixed; inset: 0; image-rendering: pixelated; }
+canvas { display: block; position: fixed; inset: 0; image-rendering: pixelated; touch-action: none; }
 img { image-rendering: pixelated; }
 
 .hidden { display: none !important; }
@@ -52,6 +51,9 @@ img { image-rendering: pixelated; }
 }
 
 .card {
+  touch-action: pan-y;               /* 화면이 작을 때 카드 안은 스크롤 가능 */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   width: 100%;
   max-width: 380px;
   max-height: calc(100% - 8px);
@@ -176,6 +178,15 @@ button { font: inherit; cursor: pointer; }
 .icon.off .wave { display: none; }
 .icon.off .cross { display: inline; }
 .icon.off svg { fill: var(--muted); }
+
+@media (max-height: 700px) {
+  .card { padding: 16px 16px; }
+  .portrait { width: 48px; height: 72px; margin-bottom: 4px; }
+  .quote { margin-bottom: 8px; padding: 8px 10px; font-size: 12px; }
+  .hint { margin-bottom: 8px; }
+  .primary, .secondary { padding: 8px; margin-top: 8px; }
+  h2 { font-size: 24px; }
+}
 
 @media (max-width: 380px) {
   h1 { font-size: 36px; }
