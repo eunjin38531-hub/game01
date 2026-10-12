@@ -5,33 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <title>트롤 투수 – 공만 치면 되는데</title>
   <meta name="description" content="공만 치면 되는데, 투수가 정상이 아니다. 멈추고, 분신하고, 사라지는 마구를 홈런으로 받아쳐라!">
-  <meta name="theme-color" content="#0b1a3a">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#16204a">
+  <link rel="preload" href="fonts/Galmuri11-Bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <canvas id="game"></canvas>
 
   <div id="hud-buttons">
-    <button id="btn-pause" class="icon hidden" aria-label="일시정지">⏸</button>
-    <button id="btn-mute" class="icon" aria-label="소리 끄기">🔊</button>
+    <button id="btn-pause" class="icon hidden" aria-label="일시정지">
+      <svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="1" y="1" width="2" height="6"/><rect x="5" y="1" width="2" height="6"/></svg>
+    </button>
+    <button id="btn-mute" class="icon" aria-label="소리 끄기">
+      <svg viewBox="0 0 10 8" shape-rendering="crispEdges">
+        <rect x="0" y="3" width="2" height="2"/><rect x="2" y="2" width="1" height="4"/><rect x="3" y="1" width="1" height="6"/><rect x="4" y="0" width="1" height="8"/>
+        <g class="wave"><rect x="6" y="3" width="1" height="2"/><rect x="7" y="2" width="1" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="8" y="1" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="9" y="2" width="1" height="4"/></g>
+        <g class="cross"><rect x="6" y="2" width="1" height="1"/><rect x="7" y="3" width="2" height="2"/><rect x="9" y="2" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="9" y="5" width="1" height="1"/></g>
+      </svg>
+    </button>
   </div>
 
   <section id="scr-title" class="overlay">
     <div class="card">
-      <p class="kicker">BASEBALL × TROLL</p>
+      <div id="title-sprites" class="sprite-row"></div>
       <h1>트롤 투수</h1>
-      <p class="lead">공만 치면 되는데...<br>투수가 정상이 아니다.</p>
-      <button id="btn-start" class="primary">시작하기</button>
+      <p class="lead">공만 치면 되는데...<br>투수가 정상이 아니다!</p>
+      <button id="btn-start" class="primary">게임 시작</button>
       <p class="small">화면 탭 · 스페이스바 = 스윙</p>
     </div>
   </section>
 
   <section id="scr-select" class="overlay hidden">
     <div class="card wide">
-      <h2>스테이지 선택</h2>
+      <h2>투수 선택</h2>
       <div id="stage-grid"></div>
       <button id="btn-back" class="secondary">뒤로</button>
     </div>
@@ -40,24 +46,26 @@
   <section id="scr-intro" class="overlay hidden">
     <div class="card">
       <p class="kicker" id="intro-num"></p>
+      <img id="intro-img" class="portrait" alt="">
       <h2 id="intro-name"></h2>
       <p id="intro-title" class="muted"></p>
-      <blockquote id="intro-line"></blockquote>
+      <p id="intro-line" class="quote"></p>
       <p id="intro-mission" class="mission"></p>
       <p id="intro-hint" class="hint"></p>
       <button id="btn-play" class="primary">플레이 볼!</button>
-      <button id="btn-intro-back" class="secondary">스테이지 선택</button>
+      <button id="btn-intro-back" class="secondary">투수 선택</button>
     </div>
   </section>
 
   <section id="scr-result" class="overlay hidden">
     <div class="card">
+      <img id="res-img" class="portrait small-portrait" alt="">
       <h2 id="res-title"></h2>
       <div id="res-stars" class="stars"></div>
       <p id="res-detail"></p>
-      <button id="btn-next" class="primary">다음 스테이지</button>
+      <button id="btn-next" class="primary">다음 투수</button>
       <button id="btn-retry" class="secondary">다시 하기</button>
-      <button id="btn-res-select" class="secondary">스테이지 선택</button>
+      <button id="btn-res-select" class="secondary">투수 선택</button>
     </div>
   </section>
 
@@ -66,7 +74,7 @@
       <h2>일시정지</h2>
       <button id="btn-resume" class="primary">계속하기</button>
       <button id="btn-pause-retry" class="secondary">다시 하기</button>
-      <button id="btn-pause-select" class="secondary">스테이지 선택</button>
+      <button id="btn-pause-select" class="secondary">투수 선택</button>
     </div>
   </section>
 
