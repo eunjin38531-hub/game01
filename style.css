@@ -33,6 +33,7 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
   -webkit-font-smoothing: none;
+  word-break: keep-all;
 }
 
 canvas { display: block; position: fixed; inset: 0; image-rendering: pixelated; touch-action: none; }
@@ -95,7 +96,9 @@ h2 {
   line-height: 1.5;
 }
 .mission { font-size: 18px; margin: 0 0 6px; color: var(--yellow); }
-.hint { color: #d9ccff; font-size: 12px; line-height: 1.6; margin: 0 0 16px; }
+.hint { color: #d9ccff; font-size: 12px; line-height: 1.6; margin: 0 0 6px; }
+.grips { color: #7ee0a0; font-size: 12px; margin: -6px 0 12px; }
+.rule { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 0 0 14px; }
 
 button { font: inherit; cursor: pointer; }
 

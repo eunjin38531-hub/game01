@@ -9,7 +9,7 @@
 
   // ---------- 설정 ----------
   const BALLS = 5;                             // 스테이지당 공 개수
-  const WIN = { hr: 45, hit: 85, foul: 130 };  // 타이밍 판정 범위 (ms)
+  const WIN = { hr: 45, double: 62, hit: 85, foul: 130 };  // 타이밍 판정 범위 (ms)
   const CAM = 2.5;                             // 카메라가 홈플레이트 뒤로 떨어진 거리
   const KH = 63;                               // 높이 1 → 픽셀 (p=1 기준)
   const FENCE_Z = 4.4;
@@ -17,6 +17,15 @@
   const BASES = [[1.06, 1.06], [0, 2.12], [-1.06, 1.06]];
   const FIELDERS = [[0.98, 1.3], [0.5, 1.85], [-0.5, 1.85], [-0.98, 1.3], [-1.7, 3.1], [0, 3.6], [1.7, 3.1]];
   const BATTER = { x: -0.17, z: 0.03 };
+  const ZONE = { x: 0.1, lo: 0.28, hi: 0.66 };   // 스트라이크존 (홈플레이트 위)
+  const MAX_BALLS = 3;                           // 스테이지당 볼은 최대 3개까지만
+  // 실제 구종: 속도 배율, 궤적 휨(bx 가로, bh 세로), 전광판 구속
+  const GRIPS = {
+    fast: { name: '직구', speed: 1.0, bx: 0, bh: 0, kmh: [142, 152] },
+    curve: { name: '커브', speed: 0.78, bx: 0, bh: 0.55, kmh: [112, 122] },
+    slider: { name: '슬라이더', speed: 0.9, bx: -0.3, bh: 0.1, kmh: [128, 138] },
+    change: { name: '체인지업', speed: 0.8, bx: 0, bh: 0, kmh: [122, 132] },
+  };
 
   const PAL = {
     outline: '#1d1530', skin: '#f4c39a', skinD: '#d8946a', pants: '#f3f3f7', pantsD: '#c4c4d4',
@@ -27,25 +36,25 @@
 
   // mix: 구종별 출현 가중치. 가장 큰 가중치의 구종이 첫 공으로 나온다.
   const STAGES = [
-    { name: '김정직', title: '정직한 신인', color: '#3b82f6', T: 0.9, need: 2, mix: { straight: 1 },
+    { name: '김정직', title: '정직한 신인', color: '#3b82f6', T: 0.9, grips: ['fast'], need: 2, mix: { straight: 1 },
       intro: '난 정직하게 던진다. 진짜야.', hint: '공이 홈플레이트에 닿는 순간 스윙!' },
-    { name: '정지맨', title: '시간을 멈추는 투수', color: '#a855f7', T: 0.85, need: 2, mix: { stop: 6, straight: 4 },
+    { name: '정지맨', title: '시간을 멈추는 투수', color: '#a855f7', T: 0.85, grips: ['fast', 'curve'], need: 2, mix: { stop: 6, straight: 4 },
       intro: '공이 멈추면... 넌 언제 칠래?', hint: '멈췄던 공은 다시 출발할 때 더 빠르다.' },
-    { name: '뻥카', title: '페이크의 달인', color: '#f97316', T: 0.85, need: 2, mix: { fake: 6, straight: 2, stop: 2 },
+    { name: '뻥카', title: '페이크의 달인', color: '#f97316', T: 0.85, grips: ['fast', 'change'], need: 2, mix: { fake: 6, straight: 2, stop: 2 },
       intro: '던질까~ 말까~', hint: '중간에 사라지는 공은 가짜다. 진짜 공을 기다려라.' },
-    { name: '거북토끼', title: '느림보 → 총알', color: '#22c55e', T: 0.8, need: 2, mix: { slowfast: 6, fake: 2, stop: 2 },
+    { name: '거북토끼', title: '느림보 → 총알', color: '#22c55e', T: 0.8, grips: ['fast', 'curve', 'change'], need: 2, mix: { slowfast: 6, fake: 2, stop: 2 },
       intro: '천천히~ 천천히~ ...슝!', hint: '느린 공은 마지막에 갑자기 빨라진다.' },
-    { name: '분신술사', title: '하나가 셋으로', color: '#ec4899', T: 0.8, need: 2, mix: { clone: 6, straight: 2, slowfast: 2 },
+    { name: '분신술사', title: '하나가 셋으로', color: '#ec4899', T: 0.8, grips: ['fast', 'slider'], need: 2, mix: { clone: 6, straight: 2, slowfast: 2 },
       intro: '셋 중에 진짜는 하나뿐~', hint: '진짜 공에만 그림자가 있다!' },
-    { name: '부메랑', title: '돌아오는 공', color: '#14b8a6', T: 0.78, need: 2, mix: { boomerang: 6, clone: 2, stop: 2 },
+    { name: '부메랑', title: '돌아오는 공', color: '#14b8a6', T: 0.78, grips: ['fast', 'curve', 'slider'], need: 2, mix: { boomerang: 6, clone: 2, stop: 2 },
       intro: '갔다가~ 다시 온다~', hint: '공이 되돌아갔다가 더 빠르게 날아온다.' },
-    { name: '텔레포터', title: '순간이동 마구', color: '#6366f1', T: 0.76, need: 2, mix: { teleport: 6, boomerang: 2, fake: 2 },
+    { name: '텔레포터', title: '순간이동 마구', color: '#6366f1', T: 0.76, grips: ['fast', 'change', 'slider'], need: 2, mix: { teleport: 6, boomerang: 2, fake: 2 },
       intro: '어디로 갔게?', hint: '공이 사라졌다가 더 가까운 곳에서 나타난다.' },
-    { name: '투명인간', title: '보이지 않는 공', color: '#94a3b8', T: 0.75, need: 2, mix: { invisible: 6, teleport: 2, clone: 2 },
+    { name: '투명인간', title: '보이지 않는 공', color: '#94a3b8', T: 0.75, grips: ['fast', 'curve'], need: 2, mix: { invisible: 6, teleport: 2, clone: 2 },
       intro: '공? 무슨 공?', hint: '공이 안 보이면 그림자를 봐라!' },
-    { name: '춤신춤왕', title: '흔들리는 공', color: '#eab308', T: 0.72, need: 2, mix: { zigzag: 6, invisible: 2, slowfast: 2 },
+    { name: '춤신춤왕', title: '흔들리는 공', color: '#eab308', T: 0.72, grips: ['fast', 'slider', 'change'], need: 2, mix: { zigzag: 6, invisible: 2, slowfast: 2 },
       intro: '내 공은 춤을 춘다~', hint: '흔들려도 그림자는 거짓말을 안 한다.' },
-    { name: '트롤킹', title: '모든 마구의 왕', color: '#ef4444', T: 0.7, need: 3, boss: true,
+    { name: '트롤킹', title: '모든 마구의 왕', color: '#ef4444', T: 0.7, grips: ['fast', 'curve', 'slider', 'change'], need: 3, boss: true,
       mix: { straight: 1, stop: 1, fake: 1, slowfast: 1, clone: 1, boomerang: 1, teleport: 1, invisible: 1, zigzag: 1 },
       intro: '지금까지 본 건 연습이었다.', hint: '모든 마구가 섞여 나온다. 이번엔 홈런 3개!' },
   ];
@@ -444,7 +453,7 @@
   };
 
   function say(text, life = 1.4) { G.bubble = { text, t: 0, life }; }
-  function popup(text, sub, color, life) { G.popups = [{ text, sub, color, life, t: 0 }]; }
+  function popup(text, sub, color, life, info = null) { G.popups = [{ text, sub, color, life, info, t: 0 }]; }
   function puff(b) {
     const p = ballPos(b);
     const P = proj(p.x, p.h, b.z);
@@ -473,7 +482,8 @@
       type, z: 1, base, speed: base, real: true, visible: true, shadow: true,
       xo: 0, ho: 0, xs: 0, xsT: 0, t: 0,
       x0: -5.5 / (pm * L.KX), h0: 18.5 / (pm * KH),   // 투수 손 위치
-      xt: rand(-0.05, 0.05), ht: rand(0.35, 0.55),    // 스트라이크존 안 도착 지점
+      xt: rand(-0.07, 0.07), ht: rand(0.34, 0.58),    // 스트라이크존 안 도착 지점
+      bx: 0, bh: 0, isBall: false,
       s: {}, gone: false, arrived: false,
     };
     const s = b.s;
@@ -490,8 +500,8 @@
     const u = 1 - b.z;
     const uc = clamp(u, 0, 1);
     return {
-      x: b.x0 + (b.xt - b.x0) * u + b.xo + b.xs,
-      h: b.h0 + (b.ht - b.h0) * u + Math.sin(uc * Math.PI) * 0.12 + b.ho,
+      x: b.x0 + (b.xt - b.x0) * u + b.xo + b.xs + b.bx * (uc - uc * uc * uc),
+      h: b.h0 + (b.ht - b.h0) * u + Math.sin(uc * Math.PI) * 0.12 + b.ho + b.bh * (uc - uc * uc * uc),
     };
   }
 
@@ -515,20 +525,14 @@
           s.done = true;
           SFX.poof();
           say('분신술!', 0.8);
+          // 진짜 공은 도착 지점을 그대로 지키고, 가짜 둘을 왼쪽/오른쪽/양옆에 둔다
           const mults = shuffle([0.72, 1, 1.4]);
-          const offs = shuffle([-0.12, 0, 0.12]);
-          const realIdx = Math.floor(Math.random() * 3);
-          for (let i = 0; i < 3; i++) {
-            if (i === realIdx) {
-              b.speed = b.base * mults[i];
-              b.xsT = offs[i];
-            } else {
-              G.balls.push(Object.assign({}, b, {
-                type: 'ghost', real: false, shadow: false, s: {},
-                speed: b.base * mults[i], xsT: offs[i],
-              }));
-            }
-          }
+          const offs = pick([[-0.12, 0.12], [0.12, 0.24], [-0.24, -0.12]]);
+          b.speed = b.base * mults[0];
+          offs.forEach((o, k) => G.balls.push(Object.assign({}, b, {
+            type: 'ghost', real: false, shadow: false, s: {},
+            speed: b.base * mults[k + 1], xsT: o,
+          })));
         }
         break;
       case 'boomerang':
@@ -596,12 +600,17 @@
     const throwable = keys.filter((k) => k !== 'fake');
     const throwType = type === 'fake' ? pick(throwable.length ? throwable : ['straight']) : type;
     const fakes = type === 'fake' ? (G.stage.boss && Math.random() < 0.4 ? 2 : 1) : 0;
-    return { type, throwType, fakes, base: 1 / (G.stage.T * rand(0.92, 1.08)) };
+    const grip = G.pitchNo === 0 ? 'fast' : pick(G.stage.grips);
+    const gr = GRIPS[grip];
+    const ballChance = G.pitchNo === 0 ? 0 : G.stage.boss ? 0.3 : G.stageIdx === 0 ? 0.15 : 0.25;
+    const isBall = G.ballsTaken < MAX_BALLS && Math.random() < ballChance;
+    const kmh = Math.round(rand(gr.kmh[0], gr.kmh[1]));
+    return { type, throwType, fakes, grip, isBall, kmh, base: gr.speed / (G.stage.T * rand(0.92, 1.08)) };
   }
 
   function startStage() {
     Object.assign(G, {
-      mode: 'play', pitchNo: 0, results: [], homers: 0, score: 0, combo: 0,
+      mode: 'play', pitchNo: 0, results: [], homers: 0, score: 0, combo: 0, ballsTaken: 0, chase: null,
       popups: [], fx: [], parts: [], bubble: null, timing: null, hit: null,
       swingAnim: -1, laughT: 0, sadT: 0, hitstop: 0, flash: 0, cheer: 0,
     });
@@ -618,6 +627,7 @@
     G.resolved = false;
     G.arrival = null;
     G.timing = null;
+    G.chase = null;
     G.pitch = choosePitch();
     setPhase('ready', G.pitchNo === 0 ? 1.4 : rand(0.6, 1.1));
     if (G.pitchNo > 0 && Math.random() < 0.35) say(pick(LINES.taunt), 1.1);
@@ -626,13 +636,24 @@
   function release() {
     G.releaseT = G.time;
     SFX.pitch();
+    const gr = GRIPS[G.pitch.grip];
     if (G.pitch.fakes > 0) {
       G.pitch.fakes--;
-      G.balls.push(makeBall('fakeball', G.pitch.base));
+      const f = makeBall('fakeball', G.pitch.base);
+      f.bx = gr.bx; f.bh = gr.bh;
+      G.balls.push(f);
       setPhase('fakeflight', 99);
     } else {
-      G.real = makeBall(G.pitch.throwType, G.pitch.base);
-      G.balls.push(G.real);
+      const b = makeBall(G.pitch.throwType, G.pitch.base);
+      b.bx = gr.bx; b.bh = gr.bh;
+      if (G.pitch.isBall) {
+        // 존 밖: 대부분 좌우로 빠지고, 가끔 높거나 낮게
+        b.isBall = true;
+        if (Math.random() < 0.7) b.xt = (Math.random() < 0.5 ? -1 : 1) * rand(0.16, 0.22);
+        else b.ht = Math.random() < 0.5 ? rand(0.12, 0.2) : rand(0.76, 0.84);
+      }
+      G.real = b;
+      G.balls.push(b);
       setPhase('flight', 99);
     }
   }
@@ -669,11 +690,21 @@
   function judge(diffSec) {
     const ms = diffSec * 1000;
     const ad = Math.abs(ms);
+    if (G.real && G.real.isBall) {
+      // 존 밖 공에 손대면 잘 맞아도 파울
+      if (ad <= WIN.foul) resolve('foul', ms, '나쁜 공에 손댔다!');
+      else resolve('strike', ms, '볼에 헛스윙!');
+      return;
+    }
     if (ad <= WIN.hr) resolve('hr', ms);
+    else if (ad <= WIN.double) resolve('double', ms);
     else if (ad <= WIN.hit) resolve('hit', ms);
     else if (ad <= WIN.foul) resolve('foul', ms);
     else resolve('strike', ms, ms < 0 ? '헛스윙! 너무 빨라요' : '헛스윙! 너무 늦어요');
   }
+
+  // 빠르면 당겨서 좌측, 정확하면 가운데, 늦으면 밀어서 우측 (우타자)
+  const dirOf = (ms) => (ms < -15 ? 0 : ms > 15 ? 2 : 1);
 
   function timingText(ms) {
     const a = Math.round(Math.abs(ms));
@@ -684,14 +715,24 @@
   function resolve(kind, ms, label) {
     if (G.resolved) return;
     G.resolved = true;
+    if (kind === 'ball') {
+      // 볼을 참으면 공 개수를 쓰지 않는다
+      G.ballsTaken++;
+      popup('볼!', '잘 참았다! 공 개수는 그대로', '#7ee0a0', 1.3, pitchInfo());
+      SFX.mitt();
+      if (!G.bubble || G.bubble.t > 0.3) say(pick(['쳇...', '안 속네?', '눈 좋은데?']), 1.0);
+      setPhase('result', 1.2);
+      return;
+    }
     G.results.push(kind);
     if (ms !== null && ms !== undefined) G.timing = { ms };
+    const info = pitchInfo();
     if (kind === 'hr') {
       G.homers++;
       G.combo++;
       G.score += 100 * G.combo;
       const dist = Math.round(clamp(152 - Math.abs(ms) * 0.8 + rand(-6, 6), 105, 160));
-      popup('홈런!!', `${dist}m · ${timingText(ms)}`, '#ffcd3c', 2.0);
+      popup('홈런!!', `${['좌월', '중월', '우월'][dirOf(ms)]} ${dist}m`, '#ffcd3c', 2.0, info);
       G.cheer = 2.0;
       G.shake = 0.5;
       G.sadT = 1.8;
@@ -704,30 +745,37 @@
       [0, 0.35, 0.7].forEach((d, i) => setTimeout(() => {
         firework(rand(LW * 0.2, LW * 0.8), rand(L.standsTop * 0.4 + 4, L.wallTop - 4), ['#ffcd3c', '#ec4899', '#3b82f6'][i]);
       }, 250 + d * 1000));
-    } else if (kind === 'hit') {
+    } else if (kind === 'double' || kind === 'hit') {
       G.combo = 0;
-      G.score += 30;
-      popup('안타!', timingText(ms), '#6fb6ff', 1.4);
-      G.cheer = 0.6;
+      const dbl = kind === 'double';
+      G.score += dbl ? 50 : 30;
+      const where = dbl ? ['좌중간 2루타', '중견수 키를 넘는 2루타', '우중간 2루타'] : ['좌전 안타', '중전 안타', '우전 안타'];
+      popup(dbl ? '2루타!' : '안타!', where[dirOf(ms)], dbl ? '#7ee0a0' : '#6fb6ff', 1.5, info);
+      G.cheer = dbl ? 0.9 : 0.6;
       G.hitstop = 0.06;
       SFX.crack();
       launch(ms, kind);
-      setPhase('result', 1.5);
+      setPhase('result', 1.6);
     } else if (kind === 'foul') {
       G.combo = 0;
       G.score += 5;
-      popup('파울', timingText(ms), '#e6e1f5', 1.2);
+      popup('파울', label || (ms < 0 ? '3루 쪽 파울' : '1루 쪽 파울'), '#e6e1f5', 1.3, info);
       SFX.foul();
       launch(ms, kind);
       setPhase('result', 1.3);
     } else {
       G.combo = 0;
-      popup('스트라이크!', label || '보기만 했네...', '#ff6a5f', 1.3);
+      popup('스트라이크!', label || '보기만 했네...', '#ff6a5f', 1.3, info);
       SFX.strike();
       G.laughT = 1.0;
       if (!G.bubble || G.bubble.t > 0.3) say(pick(LINES.strike), 1.2);
       setPhase('result', 1.4);
     }
+  }
+
+  function pitchInfo() {
+    if (!G.real) return null;
+    return `${GRIPS[G.pitch.grip].name} ${G.pitch.kmh}km/h`;
   }
 
   // 맞은 공을 날려 보낸다
@@ -737,10 +785,24 @@
     const p = ballPos(b);
     b.gone = true;
     const hit = { x: p.x, h: p.h, z: Math.max(b.z, 0), t: 0, bounced: false };
-    if (kind === 'hr') Object.assign(hit, { vz: 4.8, vh: 3.2, vx: (ms / WIN.hr) * 0.7 });
-    else if (kind === 'hit') Object.assign(hit, { vz: 2.4, vh: 1.3, vx: (ms / WIN.hit) * 1.4 + rand(-0.3, 0.3) });
+    const side = dirOf(ms) - 1; // -1 좌측, 0 가운데, 1 우측
+    if (kind === 'hr') Object.assign(hit, { vz: 4.8, vh: 3.2, vx: side * 1.1 + rand(-0.15, 0.15) });
+    else if (kind === 'double') Object.assign(hit, { vz: 3.3, vh: 1.7, vx: side * 1.8 + rand(-0.2, 0.2) });
+    else if (kind === 'hit') Object.assign(hit, { vz: 2.3, vh: 1.1, vx: side * 1.4 + rand(-0.25, 0.25) });
     else Object.assign(hit, { vz: 0.9, vh: 2.4, vx: (ms < 0 ? -1 : 1) * 2.6 });
     G.hit = hit;
+    if (kind === 'hit' || kind === 'double') {
+      // 낙하 지점에 가장 가까운 수비수가 공을 쫓아간다
+      const gv = 2.0, t = (hit.vh + Math.sqrt(hit.vh * hit.vh + 2 * gv * Math.max(0, hit.h))) / gv;
+      const lx = hit.x + hit.vx * t, lz = hit.z + hit.vz * t;
+      let best = 0;
+      FIELDERS.forEach(([fx, fz], i) => {
+        if (Math.hypot(fx - lx, fz - lz) < Math.hypot(FIELDERS[best][0] - lx, FIELDERS[best][1] - lz)) best = i;
+      });
+      // 수비수는 담장 앞, 파울 라인 안쪽까지만 뛴다
+      const cz = clamp(lz, 0.6, FENCE_Z - 0.5);
+      G.chase = { i: best, x: clamp(lx, -cz * 0.95, cz * 0.95), z: cz, t: 0 };
+    }
   }
 
   function afterResult() {
@@ -801,7 +863,10 @@
         if (G.phaseT <= 0) setPhase('windup', 0.45);
         break;
       case 'flight':
-        if (G.arrival !== null && !G.resolved && !G.swung && G.time - G.arrival > WIN.foul / 1000) resolve('strike', null);
+        if (G.arrival !== null && !G.resolved && !G.swung && G.time - G.arrival > WIN.foul / 1000) {
+          if (G.real && G.real.isBall) resolve('ball', null);
+          else resolve('strike', null);
+        }
         break;
       case 'result':
         if (G.phaseT <= 0) afterResult();
@@ -832,6 +897,7 @@
     G.sparks = G.sparks.filter((s) => s.t < 0.15);
     if (G.bubble) { G.bubble.t += dt; if (G.bubble.t > G.bubble.life) G.bubble = null; }
     if (G.swingAnim >= 0) { G.swingAnim += dt; if (G.swingAnim > 0.75) G.swingAnim = -1; }
+    if (G.chase) G.chase.t += dt;
     if (G.hit) {
       const h = G.hit;
       h.t += dt;
@@ -920,6 +986,15 @@
     }
   }
 
+  // 스트라이크존: 점선 사각형
+  function drawZone() {
+    const a = proj(-ZONE.x, ZONE.hi, 0), b = proj(ZONE.x, ZONE.lo, 0);
+    const x0 = Math.round(a.x), x1 = Math.round(b.x), y0 = Math.round(a.y), y1 = Math.round(b.y);
+    g.fillStyle = 'rgba(255,255,255,0.7)';
+    for (let x = x0; x <= x1; x += 2) { g.fillRect(x, y0, 1, 1); g.fillRect(x, y1, 1, 1); }
+    for (let y = y0; y <= y1; y += 2) { g.fillRect(x0, y, 1, 1); g.fillRect(x1, y, 1, 1); }
+  }
+
   function drawShadow(x, z) {
     const P = proj(x, 0, z);
     const w = P.p > 0.37 ? 5 : 4;
@@ -964,15 +1039,25 @@
     // 수비수 (멀리 있는 선수부터)
     const st = G.stage;
     const fielderPose = G.cheer > 1 ? 'sad' : 'crouch';
-    for (const [fx, fz] of [...FIELDERS].sort((a, b) => b[1] - a[1])) {
+    const order = FIELDERS.map((f, i) => i).sort((a, b) => FIELDERS[b][1] - FIELDERS[a][1]);
+    for (const i of order) {
+      let [fx, fz] = FIELDERS[i];
+      let pose = fielderPose;
+      if (G.chase && G.chase.i === i) {
+        const q = Math.min(1, G.chase.t / 1.1) * 0.85;
+        fx = lerp(fx, G.chase.x, q);
+        fz = lerp(fz, G.chase.z, q);
+        pose = 'idle';
+      }
       const P = proj(fx, 0, fz);
-      blit(pitcherSprite(st, fielderPose), P.x, P.y);
+      blit(pitcherSprite(st, pose), P.x, P.y);
     }
     // 투수
     const M = proj(0, 0, 1);
     const pose = pitcherPose();
     const bob = pose === 'laugh' ? (Math.floor(G.clock / 60) & 1) : 0;
     blit(pitcherSprite(st, pose), M.x + bob, M.y);
+    if (G.mode === 'play' || G.mode === 'paused') drawZone();
     // 공
     const live = G.balls.filter((b) => !b.gone).sort((a, b) => b.z - a.z);
     for (const b of live) if (b.shadow) drawShadow(ballPos(b).x, b.z);
@@ -1045,7 +1130,8 @@
     const fs = 12 * U;
     const x = 12, y = 12;
     const combo = G.combo >= 2 ? `  ${G.combo}연속!` : '';
-    const line3 = `홈런 ${G.homers}/${st.need}  점수 ${G.score}${combo}`;
+    const balls = G.ballsTaken ? `  볼 ${G.ballsTaken}` : '';
+    const line3 = `홈런 ${G.homers}/${st.need}  점수 ${G.score}${balls}${combo}`;
     const stageText = `STAGE ${G.stageIdx + 1} `;
     ctx.font = `${fs}px ${FONT}`;
     const stageW = ctx.measureText(stageText).width;
@@ -1054,7 +1140,7 @@
     panel(x, y, w, h);
     pxText(stageText, x + fs * 0.5, y + fs * 0.85, fs, '#ffcd3c', 'left');
     pxText(st.name, x + fs * 0.5 + stageW, y + fs * 0.85, fs, '#fff7e6', 'left');
-    const colors = { hr: '#ffcd3c', hit: '#6fb6ff', foul: '#c9c2dd', strike: '#ff6a5f' };
+    const colors = { hr: '#ffcd3c', double: '#7ee0a0', hit: '#6fb6ff', foul: '#c9c2dd', strike: '#ff6a5f' };
     for (let i = 0; i < BALLS; i++) {
       const r = G.results[i];
       ballIcon(Math.round(x + fs * 0.6 + i * fs * 1.2), Math.round(y + fs * 1.65), colors[r] || '#4b3c80', i === G.results.length && G.mode === 'play');
@@ -1073,7 +1159,12 @@
       ctx.globalAlpha = alpha;
       pxText(p.text, W / 2, cy + bounce, size, p.color);
       if (p.sub) pxText(p.sub, W / 2, cy + size * 0.9, 12 * U, '#fff7e6');
-      if (G.timing && p.t > 0.1) drawTimingBar(W / 2, (proj(0, 0, 0).y + 12) * PX);
+      if (p.info) pxText(p.info, W / 2, cy + size * 0.9 + 12 * U * 1.5, 12 * U, '#b9a9e0');
+      if (G.timing && p.t > 0.1) {
+        const by = (proj(0, 0, 0).y + 12) * PX;
+        drawTimingBar(W / 2, by);
+        pxText(timingText(G.timing.ms), W / 2, by + 12 * U * 1.6, 12 * U, '#fff7e6');
+      }
       ctx.restore();
     }
   }
@@ -1231,6 +1322,7 @@
     $('intro-img').src = spriteURL(st, 'idle', 4);
     $('intro-name').textContent = st.name;
     $('intro-title').textContent = st.title;
+    $('intro-grips').textContent = `구종: ${st.grips.map((k) => GRIPS[k].name).join(' · ')}`;
     $('intro-line').textContent = `"${st.intro}"`;
     $('intro-mission').textContent = `공 ${BALLS}개 중 홈런 ${st.need}개!`;
     $('intro-hint').textContent = `힌트: ${st.hint}`;
